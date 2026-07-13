@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA Triage Dashboard | FinTech AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --glass-bg: rgba(17, 24, 39, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --card-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 30px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px 0 var(--primary-glow);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 var(--primary-glow);
+            background: #4f46e5;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Result Panel Styling */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .predict-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 5px solid var(--text-muted);
+        }
+
+        .predict-status.normal {
+            border-left-color: var(--accent-green);
+        }
+
+        .predict-status.delay {
+            border-left-color: var(--accent-red);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .status-badge.normal {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-badge.delay {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-card h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .metric-card p {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .explanation-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .explanation-field {
+            margin-bottom: 15px;
+        }
+
+        .explanation-field h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .explanation-field p {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .guardrail-blocked {
+            color: var(--accent-red);
+            font-weight: bold;
+            text-align: center;
+            padding: 15px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SLA TRIAGE DASHBOARD</h1>
+        <p>FinTech Pipeline Predictor & LLM Explanation Portal</p>
+    </header>
+
+    <div class="container">
+        <!-- Input Form -->
+        <div class="card">
+            <form id="predict-form">
+                <div class="form-group">
+                    <label for="product">Financial Product</label>
+                    <select id="product" name="product">
+                        <option value="Credit card or prepaid card">Credit card / Prepaid</option>
+                        <option value="Debt collection">Debt Collection</option>
+                        <option value="Checking or savings account">Checking / Savings</option>
+                        <option value="Mortgage">Mortgage</option>
+                        <option value="Student loan">Student Loan</option>
+                    </select>
+                </div>
+
+                <div class="metrics-grid" style="margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label for="zip_code">ZIP Code (Numeric)</label>
+                        <input type="number" id="zip_code" name="zip_code" value="90210" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="submitted_via">Submission Method</label>
+                        <select id="submitted_via" name="submitted_via">
+                            <option value="1">Web (Instant)</option>
+                            <option value="2">Phone / Referral</option>
+                            <option value="3">Mail / Fax</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="metrics-grid" style="margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label for="narrative_length">Narrative Length (chars)</label>
+                        <input type="number" id="narrative_length" name="narrative_length" value="450" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_response_length">Company Resp. Length</label>
+                        <input type="number" id="company_response_length" name="company_response_length" value="120" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="narrative">Consumer Narrative Text</label>
+                    <textarea id="narrative" name="narrative" placeholder="Paste complaint text here... (PII detector will screen this)"></textarea>
+                </div>
+
+                <button type="submit" class="btn">Analyze Complaint SLA</button>
+            </form>
+        </div>
+
+        <!-- Output Cards -->
+        <div class="results-panel">
+            <!-- ML Prediction -->
+            <div class="card" style="padding: 25px;">
+                <div class="predict-status" id="predict-status">
+                    <div>
+                        <span style="font-size: 0.9rem; color: var(--text-muted); display: block;">ML Prediction Status</span>
+                        <strong id="prediction-text" style="font-size: 1.3rem;">No Data Submitted</strong>
+                    </div>
+                    <div class="status-badge" id="status-badge">N/A</div>
+                </div>
+
+                <div class="metrics-grid" style="margin-top: 15px;">
+                    <div class="metric-card">
+                        <h3>Model Confidence</h3>
+                        <p id="pred-prob">0.0%</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Guardrail Status</h3>
+                        <p id="guard-status" style="font-size: 1.1rem; padding-top: 5px;">Idle</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LLM Explanation -->
+            <div class="card explanation-card" id="explanation-card">
+                <h2>AI Copilot Explanation</h2>
+                <div class="explanation-field">
+                    <h4>Identified Case Label</h4>
+                    <p id="exp-label">-</p>
+                </div>
+                <div class="explanation-field">
+                    <h4>Confidence Tier</h4>
+                    <p id="exp-confidence">-</p>
+                </div>
+                <div class="explanation-field">
+                    <h4>Primary Explanatory Factor</h4>
+                    <p id="exp-primary">-</p>
+                </div>
+                <div class="explanation-field">
+                    <h4>Secondary Supporting Factor</h4>
+                    <p id="exp-secondary">-</p>
+                </div>
+                <div class="explanation-field">
+                    <h4>Recommended Operational Action</h4>
+                    <p id="exp-action">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predict-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                product: document.getElementById('product').value,
+                zip_code: document.getElementById('zip_code').value,
+                submitted_via: document.getElementById('submitted_via').value,
+                narrative_length: document.getElementById('narrative_length').value,
+                company_response_length: document.getElementById('company_response_length').value,
+                narrative: document.getElementById('narrative').value
+            };
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                // Update ML Card
+                const predStatus = document.getElementById('predict-status');
+                const predText = document.getElementById('prediction-text');
+                const badge = document.getElementById('status-badge');
+                
+                predStatus.className = 'predict-status';
+                if (data.prediction === 1) {
+                    predStatus.classList.add('delay');
+                    predText.innerText = "Extreme Delay Risk";
+                    badge.className = "status-badge delay";
+                    badge.innerText = "SLA Risk";
+                } else {
+                    predStatus.classList.add('normal');
+                    predText.innerText = "Normal Processing Speed";
+                    badge.className = "status-badge normal";
+                    badge.innerText = "On Track";
+                }
+                
+                document.getElementById('pred-prob').innerText = (data.probability * 100).toFixed(1) + '%';
+                
+                // Update Guardrail Status
+                const guardText = document.getElementById('guard-status');
+                if (data.guardrail_status === 'Blocked') {
+                    guardText.innerText = "Blocked (PII)";
+                    guardText.style.color = "var(--accent-red)";
+                } else {
+                    guardText.innerText = "Clear (Pass)";
+                    guardText.style.color = "var(--accent-green)";
+                }
+                
+                // Update LLM Card
+                const exp = data.explanation;
+                document.getElementById('exp-label').innerText = exp.prediction_label;
+                document.getElementById('exp-confidence').innerText = exp.confidence_level.toUpperCase();
+                document.getElementById('exp-primary').innerText = exp.top_reason;
+                document.getElementById('exp-secondary').innerText = exp.second_reason;
+                document.getElementById('exp-action').innerText = exp.next_step;
+                
+            } catch (err) {
+                console.error(err);
+                alert("Failed to query prediction engine. Make sure Flask backend is running.");
+            }
+        });
+    </script>
+</body>
+</html>

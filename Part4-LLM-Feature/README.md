@@ -58,13 +58,48 @@ Before every LLM API call, the input query passes through a regular expression c
 
 ---
 
-## 4. End-to-End Pipeline Demonstration
+## 4. End-to-End Pipeline Demonstration & Manual Test Cases
+
+To demonstrate the full capability of the hybrid pipeline, use these three test cases in the local Flask UI dashboard to record your demo video:
+
+### Test Case 1: Low-Risk / Fast Processing (Normal Speed Predict + LLM explanation)
+*   **Financial Product:** `Credit card / Prepaid`
+*   **ZIP Code:** `90210`
+*   **Submission Method:** `Web (Instant)`
+*   **Narrative Length (chars):** `150`
+*   **Company Resp. Length:** `50`
+*   **Consumer Narrative Text:** `I noticed a small transaction fee on my bill that I want reversed. It is only $2.50.`
+*   **Expected ML Prediction:** Normal Processing Speed
+*   **Expected Guardrail Status:** Clear (Pass)
+*   **Expected LLM Output:** Explains that short digital complaints are processed immediately.
+
+### Test Case 2: High-Risk / SLA Breach (Extreme Delay Predict + LLM explanation)
+*   **Financial Product:** `Mortgage`
+*   **ZIP Code:** `10001`
+*   **Submission Method:** `Mail / Fax`
+*   **Narrative Length (chars):** `3500`
+*   **Company Resp. Length:** `450`
+*   **Consumer Narrative Text:** `I am writing this long letter because my bank has repeatedly failed to process my escrow accounts correctly over the last six months. I have sent multiple document updates and physical packages but I get no response...`
+*   **Expected ML Prediction:** Extreme Delay Risk (Class 1)
+*   **Expected Guardrail Status:** Clear (Pass)
+*   **Expected LLM Output:** Explains that paper submissions of complex products (like mortgages) with long narratives require complex legal reviews, causing long forwarding delays.
+
+### Test Case 3: PII Security Trigger (Block Guardrail)
+*   **Financial Product:** `Debt collection`
+*   **ZIP Code:** `30301`
+*   **Submission Method:** `Phone / Referral`
+*   **Narrative Length (chars):** `500`
+*   **Company Resp. Length:** `120`
+*   **Consumer Narrative Text:** `Please contact me at test@company.com or call my cell 123-456-7890 to remove this incorrect collection notice from my credit report.`
+*   **Expected ML Prediction:** N/A (Bypassed)
+*   **Expected Guardrail Status:** Blocked (PII)
+*   **Expected LLM Output:** None (Bypassed. Returns PII Warning).
 
 | Input Feature Vector | Predicted Class | Probability | Explanation JSON | Validation Status | Pass / Block |
 |---|---|---|---|---|---|
-| **Input 1:** Web submit, short narrative | 0 | 0.024 | `{"prediction_label": "Normal Speed", ...}` | **PASS** | **Pass (No PII)** |
-| **Input 2:** Mail submit, long narrative | 1 | 0.812 | `{"prediction_label": "Extreme Delay", ...}` | **PASS** | **Pass (No PII)** |
-| **Input 3:** Phone submit, PII included | - | - | `None` | **FAIL (Blocked)** | **Blocked (PII)** |
+| **Test Case 1 (Web)** | 0 | ~0.95+ | `{"prediction_label": "Normal Speed", ...}` | **PASS** | **Pass (No PII)** |
+| **Test Case 2 (Mail)** | 1 | ~0.80+ | `{"prediction_label": "Extreme Delay", ...}` | **PASS** | **Pass (No PII)** |
+| **Test Case 3 (PII)** | - | - | `None` | **FAIL (Blocked)** | **Blocked (PII)** |
 
 ---
 
